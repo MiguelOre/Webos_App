@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>GAME</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script type="text/javascript" src="../Logic/jquery-1.11.0.min.js"></script>
+        <script src="Phaser/phaser.min.js"></script>
+        <link rel="stylesheet" href="../CSS/style.css" />
+        <script type="text/javascript" src="qrcode.js"></script>
+        <script src="../Logic/connect.js"></script>
+        <!--QR-->
+        <link rel="stylesheet" type="text/css" href="style.css">
+
+        <script type="text/javascript">
+            var webSocket = {};
+            var obj;
+            var element;
+            var cursor = "";
+            var audio = new Audio("../Assets/music/intro_sfx.mp3");
+            audio.addEventListener(
+                'ended', 
+                function () {
+                    this.currentTime = 0;
+                    this.play();
+                },
+                false);
+            
+            var config = {
+                type: Phaser.AUTO,
+                width: 1920,
+                height: 1080,
+                parent: "container",
+                type: Phaser.AUTO,
+                physics: {
+                    default: 'arcade',
+                    arcade: {
+                        enableSleeping: true,
+                        debug: true,
+                        gravity: {
+                            y: 0
+                        }
+                    }
+                },
+                scene: {
+                    preload: preload,
+                    create: create,
+                    update: update
+                }
+            }
+            var game = new Phaser.Game(config);
+            
+            function preload ()
+            {
+                
+                this.load.image('table', 'https://i.ibb.co/L5p4XPN/table1920x1080.png');
+
+                //test
+                this.load.image('hsolid', 'https://i.ibb.co/B26tqkP/h-Transparent-Solid.png');
+                this.load.image('vsolid', 'https://i.ibb.co/mN8WXRv/v-Transparent-Solid.png');
+                this.load.image('hSolidExt', 'https://i.ibb.co/xFw2jmw/h-Transparent-Solid-Ext.png');
+                this.load.image('vSolidExt', 'https://i.ibb.co/DVbq9Bq/v-Transparent-Solid-Ext.png');
+                this.load.image('holeBig', 'https://i.ibb.co/4sKzxgT/hole-Corner.png');
+                
+                this.load.image('cue', 'https://i.ibb.co/pW7Vr0b/taco-Madera-Dibujo-Punta-Delgada300x10.png');//wwun
+                
+                this.load.image('whiteBall', 'https://i.ibb.co/VQ7XwLG/white-Ball.png');
+                this.load.image('ball01', 'https://i.ibb.co/PMz49w2/ball01.png');
+                this.load.image('ball02', 'https://i.ibb.co/mNtFs3m/ball02.png');
+                this.load.image('ball03', 'https://i.ibb.co/yXDNntF/ball03.png');
+                this.load.image('ball04', 'https://i.ibb.co/3h6jyDN/ball04.png');
+                this.load.image('ball05', 'https://i.ibb.co/rZygsTM/ball05.png');
+                this.load.image('ball06', 'https://i.ibb.co/1zny081/ball06.png');
+                this.load.image('ball07', 'https://i.ibb.co/R6QvC8K/ball07.png');
+                this.load.image('ball08', 'https://i.ibb.co/10yyQWm/ball08.png');
+                this.load.image('ball09', 'https://i.ibb.co/3zk1jfh/ball09.png');
+                this.load.image('ball10', 'https://i.ibb.co/C90QqfX/ball10.png');
+                this.load.image('ball11', 'https://i.ibb.co/BLssSRx/ball11.png');
+                this.load.image('ball12', 'https://i.ibb.co/vmbYCCR/ball12.png');
+                this.load.image('ball13', 'https://i.ibb.co/QJVppGw/ball13.png');
+                this.load.image('ball14', 'https://i.ibb.co/S3kZbvc/ball14.png');
+                this.load.image('ball15', 'https://i.ibb.co/smRXSyY/ball15.png');
+
+                this.load.image('touchingPoint', 'https://i.ibb.co/59VVH8J/touching-Point1x1.png');
+
+                this.load.image('goldenCup', 'https://i.ibb.co/q9NXpcb/golden-Cup170x220.png');
+
+                this.load.image('yellowConfetti', 'https://i.ibb.co/J775Zpp/yellow-Confetti10x10.png');
+                this.load.image('purpleConfetti', 'https://i.ibb.co/6tRDnPJ/purple-Confetti10x10.png');
+                this.load.image('redConfetti', 'https://i.ibb.co/3WGj5JW/red-Confetti10x10.png');
+                this.load.image('greenConfetti', 'https://i.ibb.co/Yd8KVbN/green-Confetti10x10.png');
+                this.load.image('lightBlueConfetti', 'https://i.ibb.co/mH7NZ2T/light-Blue-Confetti10x10.png');
+
+                //avatar
+                this.load.image('batman','https://i.ibb.co/cbz1KP2/batman250x250.png');
+                this.load.image('blackwidow','https://i.ibb.co/8NhBYPG/blackwidow250x250.png');
+                this.load.image('captain','https://i.ibb.co/wcF2hC4/captain250x250.png');
+                this.load.image('ironman','https://i.ibb.co/Z2pJ21j/ironman250x250.png');
+                this.load.image('tombraider','https://i.ibb.co/MGXB7Dt/tombraider250x250.png');
+                this.load.image('wonderwomen','https://i.ibb.co/rt4GQ55/wonderwomen250x250.png');
+
+                //pause
+                this.load.image('pause','https://i.ibb.co/McvMyYL/pause.png');
+            }
+
+            function release (){
+                for (var i = 0; i < 100; i++)
+                {
+                    var pos = Phaser.Geom.Rectangle.Random(spriteBounds);
+
+                    var frame = 'veg0' + Phaser.Math.Between(1, 9).toString();
+
+                    var bob = blitter.create(pos.x, pos.y, frame);
+
+                    bob.angle = 0;
+                    bob.scaleX = 1;
+                    bob.scaleY = 1;
+                    bob.displayOriginX = 0;
+                    bob.displayOriginY = 0;
+
+                    this.physics.add.existing(bob);
+
+                    bob.body.setVelocity(Phaser.Math.Between(200, 400), Phaser.Math.Between(200, 400));
+                    bob.body.setBounce(1);
+                    bob.body.setCollideWorldBounds(true);
+
+                    if (Math.random() > 0.5)
+                    {
+                        bob.body.velocity.x *= -1;
+                    }
+
+                    if (Math.random() > 0.5)
+                    {
+                        bob.body.velocity.y *= -1;
+                    }
+                }
+            }
+
+            var hp;
+            var hp2;
+
+            var bolaBlanca, bola1, bola2, bola3, bola4, bola5, bola6, bola7, bola8, bola9, bola10, bola11, bola12, bola13, bola14, bola15;
+            var aBola1, aBola2, aBola3, aBola4, aBola5, aBola6, aBola7, aBola9, aBola10, aBola11, aBola12, aBola13, aBola14, aBola15;
+            var arregloDeBolasCompleto = [];
+            var isNewOpeningShoot = true;
+            var isAssignedBalls = false;
+            var mantenerTurno = false;
+            var cue;
+
+            var posX = [], posY = [];                   //arreglo de posiciones iniciales
+            var arregloAleatorio = [];                  //arreglo para ordenamiento inicial
+
+            var insertedBalls = [];
+
+            var arregloBolasJugador1 = [];
+            var arregloBolasJugador2 = [];
+
+            var tipoDeBolaJugador1 = "";
+            var tipoDeBolaJugador2 = "";
+
+            var bolasPendientesJugador1 = 7;
+            var bolasPendientesJugador2 = 7;
+
+            //esto debe ser aleatorio
+            var turnoDeJugador = 0;
+
+            var bolasRayadas = [];
+            var bolasSolidas = [];
+
+            var radianAngle = 30 * (Math.PI / 180);     //ángulo ordenamiento inicial
+            var pmx = 1270;                             //posición bola 8
+            var pmy = 654;                              //posición bola 8
+            
+            var labelUser1; //letras de jugador 1
+            var labelUser2; //letras de jugador 2
+            var label;  //letras de turno
+
+            var activeGyroscope = true;
+
+            var isBallReadyToShoot = false;
+
+            var isNewShoot = true;
+
+            var escucharBolaEnMano = true;
+
+            var faltaPorBolaBlanca = false;
+
+            var temporalDividerPlatform;
+
+            var escucharTaco = false;
+
+            var touchingPointOnMovement = false;
+
+            var barra;
+            var linea;
+            var chevron;
+            var line1i;
+            var line1d;
+            var lineaGigante;
+
+            var turnoDeJugadorMsg = "Es el Turno de";
+            var asignandoTipoDeBola = "Se asignará el tipo de bola insertada por el primer jugador";
+
+            var labelStyleAsignandoTipoDeBola;
+
+            var ejecutarTiro = false;
+
+            var popUp;
+
+            var labelGanador;
+
+            var confetti = [];
+
+            var nombreDeJugador;
+
+            var arregloNombreAvatares = [];
+
+            var nombreyAvatarDeJugador1;
+            var nombreyAvatarDeJugador2;
+
+            var valoresDelJugador1;
+            var valoresDelJugador2;
+
+            var aceleracionCapturada;
+            var ejecutarTiroConfirm = false;
+            var esperarConfirmacionAcelerometro = false;
+
+            var tipoPrimeraBolaGolpeadaXTiro = "";
+
+            var paused = false;
+
+            var puntosParaBandas = [];
+
+            var arregloDeConfettis = [];
+
+            var platforms;
+            var ganadorhabilitado = false;
+
+
+            var imgPause;
+            class Bola{
+                constructor(numeroDeBola, tipoDeBola, bola){
+                    this.numeroDeBola = numeroDeBola;
+                    this.tipoDeBola = tipoDeBola;
+                    this.onTable = true;
+                    this.bola = bola;
+                }
+                
+                getNumeroDeBola(){
+                    return this.numeroDeBola;
+                }
+                
+                getTipoDeBola(){
+                    return this.tipoDeBola;
+                }
+
+                getOnTable(){
+                    return this.onTable;
+                }
+
+                getBola(){
+                    return this.bola;
+                }
+                
+                setNumeroDeBola(numeroDeBola){
+                    this.numeroDeBola = numeroDeBola;
+                }
+                
+                setTipoDeBola(tipoDeBola){
+                    this.tipoDeBola = tipoDeBola;
+                }
+
+                setOnTable(onTable){
+                    this.onTable = onTable;
+                }
+                
+                setBola(bola){
+                    this.bola = bola;
+                }
+            }
+
+            class HealthBar {
+              constructor (scene, x, y, longitude, altitude)  //new HealthBar(this, 120, 200, 300) //longitude
+              {
+                this.bar = new Phaser.GameObjects.Graphics(scene);
+                this.x = x;
+                this.y = y;
+                this.value = 0;
+                this.p = 76 / 100;
+                this.longitude = longitude;
+                this.altitude = altitude;
+                this.draw();
+                scene.add.existing(this.bar);
+              }
+
+              decrease (amount)
+              {
+                this.value -= amount;
+                if (this.value < 0)
+                {
+                  this.value = 0;
+                }
+                this.draw();
+                return (this.value === 0);
+              }
+
+              setValue (amount){
+                this.value = amount;
+                if (this.value < 0){
+                  this.value = 0;
+                }
+                if (this.value > 20){//30){   //valor máximo que se aceptará del acelerómetro
+                  this.value = 20;//30;
+                }
+                
+                this.draw();
+                return (this.value === 0);
+              }
+
+              draw (){
+                this.bar.clear();
+                //  BG
+                this.bar.fillStyle(0xFFFFFF);
+                this.bar.fillRect(this.x, this.y, this.longitude, this.altitude);   // (posX, posY, largo, alto)
+                
+                this.bar.fillStyle(0xff0000);
+                
+                var d = this.value * 37.5;
+                if(d>=this.altitude)
+                    d-=(4*2);
+                
+                this.bar.fillRect(this.x + 4, (this.y + this.altitude - 4), this.longitude - (4*2), -d);  //posX, posY, largo, alto
+              }
+
+              hideBar (){
+                  this.bar.clear();
+              }
+            }
+
+            function create ()
+            {
+
+                
+                for(var i=0, maxSize=24; i<maxSize; i++){
+                    puntosParaBandas[i] = this.physics.add.image(392-i, 345-i, 'touchingPoint');
+                    puntosParaBandas[maxSize+i] = this.physics.add.image(347-i, 390-i, 'touchingPoint');
+                    puntosParaBandas[maxSize*2+i] = this.physics.add.image(346-i, 912+i, 'touchingPoint');
+                    puntosParaBandas[maxSize*3+i] = this.physics.add.image(390-i, 958+i, 'touchingPoint');
+                    puntosParaBandas[maxSize*4+i] = this.physics.add.image(1528+i, 345-i, 'touchingPoint');
+                    puntosParaBandas[maxSize*5+i] = this.physics.add.image(1570+i, 392-i, 'touchingPoint');
+                    puntosParaBandas[maxSize*6+i] = this.physics.add.image(1570+i, 910+i, 'touchingPoint');
+                    puntosParaBandas[maxSize*7+i] = this.physics.add.image(1529+i, 959+i, 'touchingPoint');
+                    /*if(i%3!=0){
+                        puntosParaBandas[maxSize*8+i] = this.physics.add.image(1529+i, 959-i, 'touchingPoint');
+                    }else{
+                        puntosParaBandas[maxSize*8+i] = this.physics.add.image(1529+i, 959+i, 'touchingPoint');
+                    }*/
+                    puntosParaBandas[i].setImmovable(true);
+                    puntosParaBandas[maxSize*2+i].setImmovable(true);
+                    puntosParaBandas[maxSize*3+i].setImmovable(true);
+                    puntosParaBandas[maxSize*4+i].setImmovable(true);
+                    puntosParaBandas[maxSize*5+i].setImmovable(true);
+                    puntosParaBandas[maxSize*6+i].setImmovable(true);
+                    puntosParaBandas[maxSize*7+i].setImmovable(true);
+                }
+                
+                //hp = new HealthBar(this, 120, 274, 60, 750);
+                //hp2 = new HealthBar(this, 1740, 274, 60, 750);
+                //hp = new HealthBar(this, config.width/2, 1050, 300);
+
+                //temp captura flechas teclado
+                cursors = this.input.keyboard.createCursorKeys();
+                //fin temp captura flechas teclado
+
+                //capturando los valores enviados desde el dispositivo
+                //nombre de usuario y nombre de avatar
+                
+                nombreyAvatarDeJugador1 = (new URLSearchParams(window.location.search)).get('player1Name');
+                if(nombreyAvatarDeJugador1 == null){
+                  nombreyAvatarDeJugador1 = "test|batman";
+                }
+                valoresDelJugador1 = nombreyAvatarDeJugador1.split("|");
+
+                nombreyAvatarDeJugador2 = (new URLSearchParams(window.location.search)).get('player2Name');
+                if(nombreyAvatarDeJugador2 == null){
+                  nombreyAvatarDeJugador2 = "Machine|ironman";
+                }
+                valoresDelJugador2 = nombreyAvatarDeJugador2.split("|");
+
+                arregloNombreAvatares[0] = "batman";
+                arregloNombreAvatares[1] = "blackwidow";
+                arregloNombreAvatares[2] = "captain";
+                arregloNombreAvatares[3] = "ironman";
+                arregloNombreAvatares[4] = "tombraider";
+                arregloNombreAvatares[5] = "wonderwomen";
+                
+                //setting avatar
+
+                //obteniendo el nombre del jugador 1
+                avatarSelectedName1 = valoresDelJugador1[1]; //c=valor obtenido al inicio de onCreate
+                avatarSelectedName2 = valoresDelJugador2[1];
+
+                for(var i=0; i<arregloNombreAvatares.length; i++){
+                    if(arregloNombreAvatares[i].toUpperCase() == avatarSelectedName1.toUpperCase()){
+                        this.add.image(400, 150, avatarSelectedName1);
+                    }
+                    if(arregloNombreAvatares[i].toUpperCase() == avatarSelectedName2.toUpperCase()){
+                        this.add.image(1520, 150, arregloNombreAvatares[i]);
+                    }
+                }
+
+                //asignando turno de tiro
+                turnoDeJugador = Math.floor(Math.random() * 2) + 1;
+
+                //temp escribe nombre del usuario 
+                var labelStyleUser1 = { font: "48px courier", fill: "#FFF", align: "center" };
+                labelUser1 = this.add.text(332, 140, ""+valoresDelJugador1[0], labelStyleUser1).setOrigin(0.5);
+                //fin de temp escribe nombre del usuario
+
+                //temp escribe nombre del usuario 
+                var labelStyleUser2 = { font: "48px courier", fill: "#FFF", align: "center" };
+                labelUser2 = this.add.text(1540, 140, ""+valoresDelJugador2[0], labelStyleUser2).setOrigin(0.5);
+                //fin de temp escribe nombre del usuario
+
+                //temp escribe letras del orden de tiro
+                var labelStyle = { font: "65px courier", fill: "#FFF", align: "center" };   //72px
+                labelTurnoDelJugador = this.add.text(960, 80, turnoDeJugadorMsg, labelStyle).setOrigin(0.5);
+                label = this.add.text(960, 150, turnoDeJugador, labelStyle).setOrigin(0.5);
+                //fin de temp escribw letras del orden de tiro
+
+                //escribe el mensaje para asignar tipo de bola
+                labelStyleAsignandoTipoDeBola = { font: "42px candara", fill: "#00F", align: "center" };
+                labelAsignandoTipoDeBola = this.add.text(960, 240, asignandoTipoDeBola, labelStyleAsignandoTipoDeBola).setOrigin(0.5);
+                //fin de escribe el mensaje para asignar tipo de bola
+                
+                arregloDeBolasCompleto = [bolaBlanca, bola1, bola2, bola3, bola4, bola5, bola6, bola7, bola8,
+                                            bola9, bola10, bola11, bola12, bola13, bola14, bola15];
+
+                bolasRayadas = [aBola1, aBola2, aBola3, aBola4, aBola5, aBola6, aBola7];
+                bolasRayadas = [aBola9, aBola10, aBola11, aBola12, aBola13, aBola14, aBola15];
+
+                
+
+                this.add.image(960, 540, 'table');
+
+                //grupo de bandas de mesa
+                platforms = this.physics.add.staticGroup();
+                
+                platforms.create(660, 312, 'hsolid');       //platforms.create(656, 312, 'hsolid');     //disminuir un pa de puntos x
+                platforms.create(656, 992, 'hsolid');
+                platforms.create(1266, 312, 'hsolid');
+                platforms.create(1260, 992, 'hsolid');      //platforms.create(1266, 992, 'hsolid');
+                platforms.create(314, 650, 'vsolid');
+                platforms.create(1604, 650, 'vsolid');
+                platforms.create(960, 278, 'hSolidExt');
+                platforms.create(960, 1028, 'hSolidExt');
+                platforms.create(280, 650, 'vSolidExt');
+                platforms.create(1638, 650, 'vSolidExt');
+                
+                //grupo de hoyos
+                holes = this.physics.add.staticGroup();
+                holes.create(345, 343, 'holeBig').setCircle(22.00);
+                holes.create(345, 997, 'holeBig').setCircle(22.00);
+                holes.create(1609, 343, 'holeBig').setCircle(22.00);
+                holes.create(1609, 997, 'holeBig').setCircle(22.00);
+                holes.create(986, 338, 'holeBig').setCircle(14.00);
+                holes.create(986, 1022, 'holeBig').setCircle(14.00);
+                
+                //nuevo
+                //triángulo
+                //var r3 = this.add.triangle(343, 386, 180, 0, 148, 148, 74, 0);
+                //r3.setStrokeStyle(2, 0x1a65ac);
+
+                //line1i = this.add.line(364,318,17,17,40,40,0x1a65ac);
+                //line1d = this.add.line(320,360,17,17,40,40,0x1a65ac);
+
+                //lineaGigante = this.add.line(864,570,540,540,40,40,0x1a65ac);
+
+                //barra = this.add.sprite(554, 655, 'barra').setOrigin(-0.12, 0.5);
+                //barra.angle = 30;
+
+                //var line2i = this.add.line(342,904,17,17,40,40,0x1a65ac);
+                //var line2d = this.add.line(320,360,17,17,40,40,0x1a65ac);
+                //var line2p = this.add.line(0,0,500,800,800,500,0x1a65ac);
+
+                //var lineads = new Phaser.Geom.Line(500, 500, 1200, 1200);
+
+                //var line4i = this.add.line(1564,904,17,17,40,40,0x1a65ac);
+                //var line4d = this.add.line(1520,952,17,17,40,40,0x1a65ac);
+
+                //this.matter.world.setBounds().disableGravity();
+                //this.arcade.world.setBounds().disableGravity();
+                //arcade
+                //chevron = '100 0 75 50 100 100 25 100 0 50 25 0';
+                //var poly = this.add.polygon(400, 100, chevron, 0xff0000, 0.2);
+                //this.arcade.add.gameObject(poly, { shape: { type: 'fromVerts', verts: chevron, flagInternal: true } });
+                //this.matter.add.gameObject(poly, { shape: { type: 'fromVerts', verts: arrow, flagInternal: true } });
+
+                //var poligono = this.matter.add.polygon(500, 500, 1, 5, 1);
+                //fin nuevo
+
+                //avatar
+                /*
+                for(int i=0; i<6; i++){
+                    avatares[i] = new Avatar()
+                }
+
+                bolaTest = this.physics.add.image(posX[0], posY[0], 'whiteBall');
+
+                avatar0 = this.physics.add.image()
+                avatares[0] =
+                bola8 = this.physics.add.image(posX[8], posY[8], 'ball08');
+                arregloDeBolasCompleto[8] = new Bola(8, "negra", bola8); 
+                */
+                
+                temporalDividerPlatform = this.physics.add.staticImage(677, 650, 'vSolidExt');
+                //temporalDividerPlatform.create();
+
+                cue = this.add.sprite(654, 655, 'cue').setOrigin(-0.12, 0.5);   //(0, 0.5);
+                //cue = this.physics.add.image(654, 655, 'cue');
+                cue.angle = -180;   //la imagen original está de derecha a izquierda, corregir y borrar esta línea
+                cue.setVisible(false);
+                
+                /*
+                setCircle(radius, offsetX, offsetY)
+                Sets this Body as using a circle, of the given radius, for all collision detection instead of a rectangle. The radius is given in pixels and is the distance from the center of the circle to the edge.
+                You can also control the x and y offset, which is the position of the Body relative to the top-left of the Sprite.
+                To change a Body back to being rectangular again call Body.setSize.
+                Note: Circular collision only happens with other Arcade Physics bodies, it does not work against tile maps, where rectangular collision is the only method supported.
+                */
+
+                //creando posiciones aleatorias para ubicar las bolas en el tiro inicial
+                arregloAleatorio = crearPosicionesAleatorio();
+                
+                //validando posición de extremos
+                arregloAleatorio = validarUbicacionDeExtremos(arregloAleatorio);
+                
+                //seteando posiciones iniciales en función de la posicón de la bola 8
+                ordenarBolas();
+                
+                bolaTest = this.physics.add.image(posX[0], posY[0], 'whiteBall');
+                arregloDeBolasCompleto[0] = new Bola(0, "blanca", bolaTest);
+                
+                bola1 = this.physics.add.image(posX[1], posY[1], 'ball01');
+                arregloDeBolasCompleto[1] = new Bola(1, "solida", bola1);
+                //
+                bola2 = this.physics.add.image(posX[2], posY[2], 'ball02');
+                arregloDeBolasCompleto[2] = new Bola(2, "solida", bola2);
+                
+                bola3 = this.physics.add.image(posX[3], posY[3], 'ball03');
+                arregloDeBolasCompleto[3] = new Bola(3, "solida", bola3);
+                //
+                bola4 = this.physics.add.image(posX[4], posY[4], 'ball04');
+                arregloDeBolasCompleto[4] = new Bola(4, "solida", bola4);
+                
+                bola5 = this.physics.add.image(posX[5], posY[5], 'ball05');
+                arregloDeBolasCompleto[5] = new Bola(5, "solida", bola5);
+                
+                bola6 = this.physics.add.image(posX[6], posY[6], 'ball06');
+                arregloDeBolasCompleto[6] = new Bola(6, "solida", bola6);
+                //
+                bola7 = this.physics.add.image(posX[7], posY[7], 'ball07');
+                arregloDeBolasCompleto[7] = new Bola(7, "solida", bola7);
+                
+                bola8 = this.physics.add.image(posX[8], posY[8], 'ball08');
+                arregloDeBolasCompleto[8] = new Bola(8, "negra", bola8);
+                
+                bola9 = this.physics.add.image(posX[9], posY[9], 'ball09');
+                arregloDeBolasCompleto[9] = new Bola(9, "rayada", bola9);
+                
+                bola10 = this.physics.add.image(posX[10], posY[10], 'ball10')
+                arregloDeBolasCompleto[10] = new Bola(10, "rayada", bola10);
+                //
+                bola11 = this.physics.add.image(posX[11], posY[11], 'ball11');
+                arregloDeBolasCompleto[11] = new Bola(11, "rayada", bola11);
+                
+                bola12 = this.physics.add.image(posX[12], posY[12], 'ball12');
+                arregloDeBolasCompleto[12] = new Bola(12, "rayada", bola12);
+                
+                bola13 = this.physics.add.image(posX[13], posY[13], 'ball13');
+                arregloDeBolasCompleto[13] = new Bola(13, "rayada", bola13);
+                
+                bola14 = this.physics.add.image(posX[14], posY[14], 'ball14');
+                arregloDeBolasCompleto[14] = new Bola(14, "rayada", bola14);
+                
+                bola15 = this.physics.add.image(posX[15], posY[15], 'ball15');
+                arregloDeBolasCompleto[15] = new Bola(15, "rayada", bola15);
+
+                imgPause = this.physics.add.image(958,590,'pause');
+                imgPause.setVisible(false);
+                
+                //agregando propiedades a las bolas: rebote, radio y límite para colisiones
+                for(i=0; i<=15; i++){
+                    arregloDeBolasCompleto[i].setOnTable(true); //no es necesario
+                    arregloDeBolasCompleto[i].getBola().setBounce(1,1); //setBounce(0.9, 0.9);
+                    arregloDeBolasCompleto[i].getBola().setCircle(18.00); //16.07
+                    arregloDeBolasCompleto[i].getBola().setCollideWorldBounds(true);
+                }
+
+                //agregando física de choques
+                for(i=0; i<15; i++){
+                    for(j= i+1; j<16; j++){
+                        if(i==0){   //valida si la bola blanca toca a otras y de qé tipo son
+                            this.physics.add.collider( arregloDeBolasCompleto[i].getBola(),arregloDeBolasCompleto[j].getBola(), mostrarMensaje);
+                            //this.game.physics.arcade.collide(sprite1, sprite2, this.someFunction, null, this);
+                            //this.physics.add.collider( arregloDeBolasCompleto[i].getBola(),arregloDeBolasCompleto[j].getBola());
+                        }else{
+                            this.physics.add.collider( arregloDeBolasCompleto[i].getBola(),arregloDeBolasCompleto[j].getBola());
+                        }
+                    }
+                }
+                
+                //bounds
+                //crea las colisiones contra las bandas de la mesa
+                for(i=0; i<16; i++){
+                    this.physics.add.collider(arregloDeBolasCompleto[i].getBola(),platforms);
+                    //this.physics.add.collider(arregloDeBolasCompleto[i].getBola(),lineaGigante);
+                }
+                
+                //valida que todas las bolas colisionen contra los hoyos
+                for(i=0; i<16; i++){
+                    this.physics.add.overlap(arregloDeBolasCompleto[i].getBola(), holes, setInsertedOnHole);//, null, this);
+                }
+
+                for(var i=0; i<16; i++){
+                    for(var j=0; j<puntosParaBandas.length; j++){
+                        this.physics.add.collider(arregloDeBolasCompleto[i].getBola(),puntosParaBandas[j]);
+                    }
+                }
+
+                //prueba de colisiones con líneas
+                /*
+                for(i=0; i<16; i++){
+                    this.physics.add.collider(arregloDeBolasCompleto[i].getBola(),line1i);
+                    this.physics.add.collider(arregloDeBolasCompleto[i].getBola(),line1d);
+                    this.physics.add.collider(arregloDeBolasCompleto[i].getBola(),line1d);
+                    this.physics.add.collider(arregloDeBolasCompleto[i].getBola(),line4d);
+                }
+                */
+                                
+                //bolas asignadas a cada jugador que apparecerán en la parte superior
+                aBola1  = this.physics.add.image(0, 0, 'ball01');        aBola1.disableBody(true, true);        bolasSolidas[0]=new Bola(1 , "solida", aBola1); 
+                aBola2  = this.physics.add.image(0, 0, 'ball02');        aBola2.disableBody(true, true);        bolasSolidas[1]=new Bola(2 , "solida", aBola2);
+                aBola3  = this.physics.add.image(0, 0, 'ball03');        aBola3.disableBody(true, true);        bolasSolidas[2]=new Bola(3 , "solida", aBola3);
+                aBola4  = this.physics.add.image(0, 0, 'ball04');        aBola4.disableBody(true, true);        bolasSolidas[3]=new Bola(4 , "solida", aBola4);
+                aBola5  = this.physics.add.image(0, 0, 'ball05');        aBola5.disableBody(true, true);        bolasSolidas[4]=new Bola(5 , "solida", aBola5);
+                aBola6  = this.physics.add.image(0, 0, 'ball06');        aBola6.disableBody(true, true);        bolasSolidas[5]=new Bola(6 , "solida", aBola6);
+                aBola7  = this.physics.add.image(0, 0, 'ball07');        aBola7.disableBody(true, true);        bolasSolidas[6]=new Bola(7 , "solida", aBola7);
+                aBola9  = this.physics.add.image(0, 0, 'ball09');        aBola9.disableBody(true, true);        bolasRayadas[0]=new Bola(9 , "rayada", aBola9);
+                aBola10 = this.physics.add.image(0, 0, 'ball10');        aBola10.disableBody(true, true);        bolasRayadas[1]=new Bola(10, "rayada", aBola10);
+                aBola11 = this.physics.add.image(0, 0, 'ball11');        aBola11.disableBody(true, true);        bolasRayadas[2]=new Bola(11, "rayada", aBola11);
+                aBola12 = this.physics.add.image(0, 0, 'ball12');        aBola12.disableBody(true, true);        bolasRayadas[3]=new Bola(12, "rayada", aBola12);
+                aBola13 = this.physics.add.image(0, 0, 'ball13');        aBola13.disableBody(true, true);        bolasRayadas[4]=new Bola(13, "rayada", aBola13);
+                aBola14 = this.physics.add.image(0, 0, 'ball14');        aBola14.disableBody(true, true);        bolasRayadas[5]=new Bola(14, "rayada", aBola14);
+                aBola15 = this.physics.add.image(0, 0, 'ball15');        aBola15.disableBody(true, true);        bolasRayadas[6]=new Bola(15, "rayada", aBola15);
+            
+                //ganador
+                popUpBackGround = this.add.rectangle(0, 0, 3840, 2160, 0x333333);
+                popUpBackGround.setVisible(false);
+                //popUpBackGround.alpha = 0.5;
+
+                //rectángulo sobre la mesa con el mensaje ganador
+                popUp = this.add.rectangle(960, 650, 1220, 610, 0x0B5394);
+                popUp.setVisible(false);
+                
+                var labelStyleGanador = { font: "48px courier", fill: "#CCCCCC", align: "center" };
+                labelGanador = this.add.text(980, 680, "¡El ganador es "+(new URLSearchParams(window.location.search)).get('player1Name')+"!", labelStyleGanador).setOrigin(0.5);
+                labelGanador.setVisible(false);
+
+                //carga la imagen de la copa
+                goldenCup = this.add.image(965, 500, 'goldenCup');
+                goldenCup.setVisible(false);
+                
+                confettiUnitario = this.physics.add.image(pinicial, pfinal, 'yellowConfetti');
+                confettiUnitario = this.physics.add.image(pinicial, pfinal, 'purpleConfetti');
+                confettiUnitario = this.physics.add.image(pinicial, pfinal, 'redConfetti');
+                confettiUnitario = this.physics.add.image(pinicial, pfinal, 'greenConfetti');
+                confettiUnitario = this.physics.add.image(pinicial, pfinal, 'lightBlueConfetti');
+
+                //crea los pica pica y les asigna movimiento
+                for(var i=1; i<=5; i++){
+                    for(var j=0; j<100; j++){
+                        var confettiUnitario;
+                        var signo = Math.random() < 0.5 ? -1 : 1;
+                        do{
+                            var pinicial = (Math.floor(Math.random() * 70) + 932); //932   990
+                        }while(pinicial<932 && pinicial>990)
+                        var pfinal = 410;
+                        switch (i){
+                        case 1:
+                            //confettiUnitario = this.physics.add.image(pinicial, pfinal, 'yellowConfetti');
+                            arregloDeConfettis[(((i-1)*100)+j)] = this.physics.add.image(pinicial, pfinal, 'yellowConfetti');
+                            //console.log(((i-1)*100)+j);
+                            break;
+                        case 2:
+                            //confettiUnitario = this.physics.add.image(pinicial, pfinal, 'purpleConfetti');
+                            arregloDeConfettis[(((i-1)*100)+j)] = this.physics.add.image(pinicial, pfinal, 'purpleConfetti');
+                            //console.log(((i-1)*100)+j);
+                            break;
+                        case 3:
+                            //confettiUnitario = this.physics.add.image(pinicial, pfinal, 'redConfetti');
+                            arregloDeConfettis[(((i-1)*100)+j)] = this.physics.add.image(pinicial, pfinal, 'redConfetti');
+                            //console.log(((i-1)*100)+j);
+                            break;
+                        case 4:
+                            //confettiUnitario = this.physics.add.image(pinicial, pfinal, 'greenConfetti');
+                            arregloDeConfettis[(((i-1)*100)+j)] = this.physics.add.image(pinicial, pfinal, 'greenConfetti');
+                            //console.log(((i-1)*100)+j);
+                            break;
+                        case 5:
+                            //confettiUnitario = this.physics.add.image(pinicial, pfinal, 'lightBlueConfetti');
+                            arregloDeConfettis[(((i-1)*100)+j)] = this.physics.add.image(pinicial, pfinal, 'lightBlueConfetti');
+                            //console.log(((i-1)*100)+j);
+                            break;
+                    }
+
+                        this.physics.add.collider(arregloDeConfettis[(((i-1)*100)+j)],platforms);
+                        arregloDeConfettis[(((i-1)*100)+j)].setImmovable(true);
+                        arregloDeConfettis[(((i-1)*100)+j)].setVisible(false);
+                        
+                        //arregloDeConfettis[(((i-1)*100)+j)].setBounce(1,1);
+                        //this.physics.add.collider(arregloDeConfettis[(((i-1)*100)+j)],platforms);
+                        //arregloDeConfettis[(((i-1)*100)+j)].setVelocity( signo*(Math.floor(Math.random() * 100) + 1), -1*(Math.floor(Math.random() * 100) + 1) );
+
+                        //confettiUnitario.setBounce(1,1);
+                        //this.physics.add.collider(confettiUnitario,platforms);
+                        //confettiUnitario.setVelocity( signo*(Math.floor(Math.random() * 100) + 1), -1*(Math.floor(Math.random() * 100) + 1) );
+                    
+                    }
+                }
+                //fin ganador
+            }
+
+            function mostrarMensaje(bolaBlanca, otraBola){
+                if(tipoPrimeraBolaGolpeadaXTiro==""){
+                    for(var i=1; i<arregloDeBolasCompleto.length; i++){
+                        if(otraBola == arregloDeBolasCompleto[i].getBola())
+                            tipoPrimeraBolaGolpeadaXTiro = arregloDeBolasCompleto[i].getTipoDeBola();
+                    }
+                }
+                //alert("Bola contra bola: "+tipoPrimeraBolaGolpeadaXTiro);
+            }
+
+            //valida que las bolas se hayan insertado en los hoyos y almacena las insertadas
+            function setInsertedOnHole(bola, corner){
+                for(i=0; i<arregloDeBolasCompleto.length; i++){
+                    if(arregloDeBolasCompleto != null){
+                        if(bola == arregloDeBolasCompleto[i].getBola()){
+                            //esta bola se valida aqí porqe es la única qe paraliza el juego
+                            if(validarBola8(arregloDeBolasCompleto[i])){//si se ha metido la bola 8, reiniciar tiro si es tiro inicial o terminar todo si ya había bolas asignadas
+                                return; //termina la función
+                            }
+                            arregloDeBolasCompleto[i].setOnTable(false);
+                            insertedBalls.push(arregloDeBolasCompleto[i]);
+                            arregloDeBolasCompleto[i].getBola().disableBody(true, true); //se deshabilita la bola de la mesa si se metió en el hoyo
+                        }
+                    }
+                }
+            }
+
+            function reiniciarTodo(){
+                crearPosicionesAleatorio();
+                validarUbicacionDeExtremos(arregloAleatorio);
+                ordenarBolas(); //N2
+                mantenerTurno = false;
+                escucharBolaEnMano = true;
+                temporalDividerPlatform.enableBody(true);
+                isNewShoot = true;
+                isNewOpeningShoot = true;
+            }
+
+            //realiza todas las validaciones posibles cuando se mete la bola 8
+            function validarBola8(bola){  //big o: N
+                if(bola.getNumeroDeBola() == 8){
+                    if(isNewOpeningShoot == true){ //N2:    reordena todo en mesa
+                        insertedBalls = [];
+                        crearPosicionesAleatorio();
+                        validarUbicacionDeExtremos(arregloAleatorio);
+                        ordenarBolas(); //N2
+                        for(i=0; i<arregloDeBolasCompleto.length; i++){     //reubica las bolas
+                            arregloDeBolasCompleto[i].getBola().enableBody(true, posX[i], posY[i], true, true);
+                        }
+                        //borrar
+                    }else{//agregar validación si ya se ha metido todo
+                        for(var i=0; i<arregloDeBolasCompleto.length; i++){
+                            arregloDeBolasCompleto[i].getBola().disableBody(true, true);    //se desahbilita todo para terminar con la partida
+                        }
+                        //validando que se haya metido la bola negra antes de meter todas las asignadas
+                        popUp.setVisible(true);
+                        var labelStyleGanador = { font: "48px courier", fill: "#CF0", align: "center" };
+                        //si se ha metido la bola 8 y aún hay bolas pendientes
+                        if(turnoDeJugador==1){
+                          if(bolasPendientesJugador1>0){
+                            labelGanador = this.add.text(332, 140, (new URLSearchParams(window.location.search)).get('player2Name'), labelStyleUser1).setOrigin(0.5);
+                          }else{
+                            //si se ha metido la bola 8 cuando ya no había bolas pendientes
+                            //validar si se ha metido la bola blanca
+                            if(validarBolaBlanca()==true){
+                              labelGanador = this.add.text(332, 140, (new URLSearchParams(window.location.search)).get('player2Name'), labelStyleUser1).setOrigin(0.5);
+                            }else{
+                              labelGanador = this.add.text(332, 140, (new URLSearchParams(window.location.search)).get('player1Name'), labelStyleUser1).setOrigin(0.5);
+                            }
+                          }
+                        }else{  //if(turnoDeJugador==2)
+                          if(bolasPendientesJugador2>0){
+                            labelGanador = this.add.text(332, 140, (new URLSearchParams(window.location.search)).get('player1Name'), labelStyleUser1).setOrigin(0.5);
+                          }else{
+                            //si se ha metido la bola 8 cuando ya no había bolas pendientes
+                            //validar si se ha metido la bola blanca
+                            if(validarBolaBlanca()==true){
+                              labelGanador = this.add.text(332, 140, (new URLSearchParams(window.location.search)).get('player1Name'), labelStyleUser1).setOrigin(0.5);
+                            }else{
+                              labelGanador = this.add.text(332, 140, (new URLSearchParams(window.location.search)).get('player2Name'), labelStyleUser1).setOrigin(0.5);
+                            }
+                          }
+                        }
+                        ganador();
+                        for(var i=1; i<=5; i++){
+                            for(var j=0; j<100; j++){
+                                this.physics.add.collider(arregloDeConfettis[(((i-1)*100)+j)],platforms);
+                            }
+                        }
+                    }
+                    return true;
+                }
+            }
+
+            //valida cuando se mete la bola blanca, debe cambiar de turno y habilitar bola en mano
+            function validarBolaBlanca(){       //N
+                for(i=0; i<insertedBalls.length; i++){
+                    if(insertedBalls[i].getNumeroDeBola() == 0){
+                        mantenerTurno = false;  //revisar si es necesario
+
+                        //validar que cuando se mete la bola blanca, cuando se ha metido la bola 8, se termina el juego
+                        //if(turnoDeJugador==1 && bolasPendientesJugador1<=0)
+                        //    alert("El ganador es el jugador 2");
+                        //if(turnoDeJugador==2 && bolasPendientesJugador2<=0)
+                        //    alert("El ganador es el jugador 1");
+                        
+                        //console.log("habilitar bola en mano");
+                        
+                        insertedBalls[i].getBola().enableBody(true, 654, 654, true, true);  //revisar si es necesario
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            function validarBolasMetidas(){//aca2
+                //validando qe el arreglo no esté vacío
+                if(insertedBalls == null || insertedBalls.length == 0){
+                    return;
+                }
+
+                if(isNewOpeningShoot == true){
+                    //ya se ha hecho la desactivación mediante setOnTable igual false de las bolas del arreglo de bolas completo
+                    if(insertedBalls.length>0){
+                        mantenerTurno = true;
+                    }
+                    //temp verificando comportamiento
+                    isNewOpeningShoot = false;
+                    //fin temp verificando comportamiento
+                }else{
+                    if(turnoDeJugador == 1){    //validando el  turno del jugador para la asignación
+                        for(var i=0; i<insertedBalls.length; i++){
+                            if(isAssignedBalls == false && insertedBalls[i].getTipoDeBola() != "blanca"){
+                                
+                                //asignando tipos de bola
+                                if(insertedBalls[i].getTipoDeBola()=="solida"){
+                                    tipoDeBolaJugador1="solida";
+                                    tipoDeBolaJugador2="rayada";
+                                }else{
+                                    tipoDeBolaJugador1="rayada";
+                                    tipoDeBolaJugador2="solida";
+                                }
+
+                                //definiendo que las bolas han sido asignadas
+                                isAssignedBalls = true;
+                                mantenerTurno = true;
+
+                                //tp2
+                                labelAsignandoTipoDeBola.setText("");
+                                //fin tp2
+
+                                //asigna todas las bolas al arreglo del jugador
+                                for(j=0; j<bolasSolidas.length; j++){
+                                    
+                                    //asigna el arreglo de cada tipo de bola a los jugadores
+                                    if(tipoDeBolaJugador1=="solida"){
+                                        arregloBolasJugador1[j] = bolasSolidas[j];
+                                        arregloBolasJugador2[j] = bolasRayadas[j];
+                                    }else{
+                                        arregloBolasJugador1[j] = bolasRayadas[j];
+                                        arregloBolasJugador2[j] = bolasSolidas[j];
+                                    }
+
+                                    //mostrando y ocultando las bolas de cada grupo
+                                    //aprovechando que el número de bola es el de su posición en el arreglo completo
+                                    if(arregloDeBolasCompleto[arregloBolasJugador1[j].getNumeroDeBola()].getOnTable()==false){//aca
+                                        arregloBolasJugador1[j].x = (j+8)*36;
+                                        arregloBolasJugador1[j].y = 130;
+                                        arregloBolasJugador1[j].getBola().disableBody(true, true);
+                                        bolasPendientesJugador1--;
+                                        //console.log("bolasPendientesJugador1: "+bolasPendientesJugador1+", bolasPendientesJugador2: "+bolasPendientesJugador2);
+                                    }else{
+                                        //se muestra la bola en la barra de bolas pendientes si aún no se ha insertado
+                                        arregloBolasJugador1[j].getBola().enableBody(true, (j+8)*36     , 200, true, true);
+                                    }                                    
+                                    
+                                    if(arregloDeBolasCompleto[arregloBolasJugador2[j].getNumeroDeBola()].getOnTable()==false){
+                                        arregloBolasJugador2[j].x = 1380+(j+1)*36;
+                                        arregloBolasJugador2[j].y = 130;
+                                        arregloBolasJugador2[j].getBola().disableBody(true, true);
+                                        bolasPendientesJugador2--;
+                                        console.log("bolasPendientesJugador2: "+bolasPendientesJugador2+", bolasPendientesJugador1: "+bolasPendientesJugador1);
+                                    }else{
+                                        //se muestra la bola en la barra de bolas pendientes si aún no se ha insertado
+                                        arregloBolasJugador2[j].getBola().enableBody(true, 1380+(j+1)*36, 200, true, true);
+                                    }
+                                        
+                                }
+                                
+                                insertedBalls = []; //added
+                                return;
+                            }//fin de asignación de bolas
+                            
+                            //aqí se hace la dessactivación de bolas ya insertadas cuando ya se hizo la asignación del grupo de bolas
+                            if(arregloBolasJugador1.length >= 0 && arregloBolasJugador2.length >= 0){
+                                //si ya se metió bolas del tipo asignado, desactivar
+                                //console.log("tipo de bola asignada: "+tipoDeBolaJugador1+" | tipo de bola insertada: "+insertedBalls[i].getTipoDeBola()+" ("+insertedBalls[i].getNumeroDeBola()+")");
+                                for(var a=1; a<arregloBolasJugador1.length; a++){ //no valida la bola blanca
+                                    if(insertedBalls[i].getTipoDeBola()==tipoDeBolaJugador1){
+                                        mantenerTurno = true;
+                                    }
+                                    if(insertedBalls[i].getNumeroDeBola()==arregloBolasJugador1[a].getNumeroDeBola()){
+                                        arregloBolasJugador1[a].setOnTable(false);
+                                        arregloBolasJugador1[a].getBola().disableBody(true, true);
+                                        bolasPendientesJugador1--;
+                                        //alert("cantidad de bolas pendientes disminuida");
+                                        //console.log("bolasPendientesJugador1: "+bolasPendientesJugador1+", bolasPendientesJugador2: "+bolasPendientesJugador2);
+                                        break;
+                                    }
+                                    if(insertedBalls[i].getNumeroDeBola()==arregloBolasJugador2[a].getNumeroDeBola()){
+                                        arregloBolasJugador2[a].setOnTable(false);
+                                        arregloBolasJugador2[a].getBola().disableBody(true, true);
+                                        bolasPendientesJugador2--;
+                                        //alert("cantidad de bolas pendientes disminuida");
+                                        //console.log("bolasPendientesJugador2: "+bolasPendientesJugador2+", bolasPendientesJugador1: "+bolasPendientesJugador1);
+                                        break;
+                                    }
+                                }
+                            }
+                        }//fin for
+                    }//fin de turno de jugador 1
+                    
+                    if(turnoDeJugador == 2){    //validando el  turno del jugador para la asignación
+                        for(var i=0; i<insertedBalls.length; i++){
+                            if(isAssignedBalls == false && insertedBalls[i].getTipoDeBola() != "blanca"){
+                                
+                                if(insertedBalls[i].getTipoDeBola()=="solida"){
+                                    tipoDeBolaJugador2="solida";
+                                    tipoDeBolaJugador1="rayada";
+                                }else{
+                                    tipoDeBolaJugador2="rayada";
+                                    tipoDeBolaJugador1="solida";
+                                }
+
+                                isAssignedBalls = true;
+                                mantenerTurno = true;
+
+                                //tp2
+                                labelAsignandoTipoDeBola.setText("");
+                                //fin tp2
+
+                                //asigna todas las bolas al arreglo del jugador
+                                for(var j=0; j<bolasSolidas.length; j++){
+                                    
+                                    if(tipoDeBolaJugador2=="solida"){
+                                        arregloBolasJugador1[j] = bolasRayadas[j];
+                                        arregloBolasJugador2[j] = bolasSolidas[j];
+                                    }else{
+                                        arregloBolasJugador1[j] = bolasSolidas[j];
+                                        arregloBolasJugador2[j] = bolasRayadas[j];
+                                    }
+
+                                    //aprovechando que el número de bola es el de su posición en el arreglo completo
+                                    if(arregloDeBolasCompleto[arregloBolasJugador1[j].getNumeroDeBola()].getOnTable()==false){//aca
+                                        arregloBolasJugador1[j].x = (j+8)*36;
+                                        arregloBolasJugador1[j].y = 130;
+                                        arregloBolasJugador1[j].getBola().disableBody(true, true);
+                                        bolasPendientesJugador1--;
+                                        //console.log("bolasPendientesJugador1: "+bolasPendientesJugador1+", bolasPendientesJugador2: "+bolasPendientesJugador2);
+                                    }else{
+                                        arregloBolasJugador1[j].getBola().enableBody(true, (j+8)*36     , 200, true, true);
+                                    }
+                                    
+                                    
+                                    if(arregloDeBolasCompleto[arregloBolasJugador2[j].getNumeroDeBola()].getOnTable()==false){
+                                        arregloBolasJugador2[j].x = 1380+(j+1)*36;
+                                        arregloBolasJugador2[j].y = 130;
+                                        arregloBolasJugador2[j].getBola().disableBody(true, true);
+                                        bolasPendientesJugador2--;
+                                        //console.log("bolasPendientesJugador2: "+bolasPendientesJugador2+", bolasPendientesJugador1: "+bolasPendientesJugador1);
+                                    }else{
+                                        arregloBolasJugador2[j].getBola().enableBody(true, 1380+(j+1)*36, 200, true, true);
+                                    }
+                                }
+                                insertedBalls = []; //added
+                                return;
+                            }//fin de asignación de bolas
+                            
+                            if(arregloBolasJugador1.length >= 0 && arregloBolasJugador2.length >= 0){    //aqí se hace la dessactivación de bolas ya insertadas
+                                //si ya se metió bolas del tipo asignado, desactivar
+                                for(var a=0; a<arregloBolasJugador2.length; a++){
+                                    //console.log("tipo de bola asignada: "+tipoDeBolaJugador2+" | tipo de bola insertada: "+insertedBalls[i].getTipoDeBola()+" ("+insertedBalls[i].getNumeroDeBola()+")");
+                                    if(insertedBalls[i].getTipoDeBola()==tipoDeBolaJugador2){
+                                        mantenerTurno = true;
+                                    }
+                                    if(insertedBalls[i].getNumeroDeBola()==arregloBolasJugador1[a].getNumeroDeBola()){
+                                        arregloBolasJugador1[a].setOnTable(false);
+                                        arregloBolasJugador1[a].getBola().disableBody(true, true);
+                                        bolasPendientesJugador1--;
+                                        //console.log("bolasPendientesJugador1: "+bolasPendientesJugador1+", bolasPendientesJugador2: "+bolasPendientesJugador2);
+                                        break;
+                                    }
+                                    if(insertedBalls[i].getNumeroDeBola()==arregloBolasJugador2[a].getNumeroDeBola()){
+                                        arregloBolasJugador2[a].setOnTable(false);
+                                        arregloBolasJugador2[a].getBola().disableBody(true, true);
+                                        bolasPendientesJugador2--;
+                                        //console.log("bolasPendientesJugador2: "+bolasPendientesJugador2+", bolasPendientesJugador1: "+bolasPendientesJugador1);
+                                        break;
+                                    }
+                                }
+                            }
+                        }//fin for
+                    }//fin de turno de jugador 2
+                }
+                
+                insertedBalls = [];
+            }
+
+            //movimiento del taco
+            function cueMovement(angleAmount){
+                cue.angle += (0.8*Math.round(angleAmount));
+            }
+
+            function update()
+            {
+                
+
+                if(cursor.includes("PAUSE")){
+                    paused != paused;   //cambia a verdadero o falso
+                    if(paused==true){
+                        this.scene.pause();
+                        imgPause.setVisible(true);
+                    }else{
+                        imgPause.setVisible(false);
+                        this.scene.resume();
+                    }
+                }
+
+                //asigna el nombre del jugador que tiene el turno
+                if(turnoDeJugador==1){
+                    nombreDeJugador = valoresDelJugador1[0];
+                    
+                    if(hp ==null){
+                        hp = new HealthBar(this, 120, 274, 60, 750);
+                        if(hp2!=null)
+                            hp2.hideBar();
+                        delete hp2;
+                    }
+                }
+                if(turnoDeJugador==2){
+                    nombreDeJugador = valoresDelJugador2[0];
+
+                    if(hp2 == null){
+                        hp2 = new HealthBar(this, 1740, 274, 60, 750);
+                        if(hp!=null)
+                            hp.hideBar();
+                        delete hp;
+                    }
+                }
+                label.setText(""+nombreDeJugador);
+                                
+                for(var i=0; i<arregloDeBolasCompleto.length; i++){
+                    if(Math.abs(arregloDeBolasCompleto[i].getBola().body.velocity.x)<25 && Math.abs(arregloDeBolasCompleto[i].getBola().body.velocity.y)<25)
+                        arregloDeBolasCompleto[i].getBola().setVelocity(arregloDeBolasCompleto[i].getBola().body.velocity.x*0.8, arregloDeBolasCompleto[i].getBola().body.velocity.y*0.8);
+                    else
+                        arregloDeBolasCompleto[i].getBola().setVelocity(arregloDeBolasCompleto[i].getBola().body.velocity.x*0.992, arregloDeBolasCompleto[i].getBola().body.velocity.y*0.992);
+                }
+
+                for(var i=0; i<arregloDeBolasCompleto.length; i++){
+                    arregloDeBolasCompleto[i].getBola().setFriction(0.8, 0.8);
+                }
+ 
+                bolasParadas = 0;
+                
+                if(touchingPointOnMovement == false){
+                    for(i=0; i<=15; i++){
+                        if(arregloDeBolasCompleto[i].getBola().body.velocity.x<1.5 && arregloDeBolasCompleto[i].getBola().body.velocity.x>-1.5 && arregloDeBolasCompleto[i].getBola().body.velocity.y<1.5 && arregloDeBolasCompleto[i].getBola().body.velocity.y>-1.5){
+                            bolasParadas++;
+                        }
+                    }
+                }
+                
+                if(escucharBolaEnMano == true){
+                    var movimientoCapturado = cursor.split(":");                    
+                    arregloDeBolasCompleto[0].getBola().setVelocity(0);                    
+                    if(cursor.includes("RIGHT"+turnoDeJugador)){
+                        arregloDeBolasCompleto[0].getBola().setVelocityX(200);
+                        arregloDeBolasCompleto[0].getBola().setBounce(0);
+                        
+                        for(var i=1; i<arregloDeBolasCompleto.length; i++){
+                            arregloDeBolasCompleto[i].getBola().body.setImmovable(true);
+                        }
+                    }
+                    
+                    if(cursor.includes("LEFT"+turnoDeJugador)){
+                        arregloDeBolasCompleto[0].getBola().setVelocityX(-200);
+                        arregloDeBolasCompleto[0].getBola().setBounce(0);
+
+                        for(var i=1; i<arregloDeBolasCompleto.length; i++){
+                            arregloDeBolasCompleto[i].getBola().body.setImmovable(true);
+                        }
+                    }
+                        
+                    if(cursor.includes("UP"+turnoDeJugador)){
+                        arregloDeBolasCompleto[0].getBola().setVelocityY(-200);
+                        arregloDeBolasCompleto[0].getBola().setBounce(0);
+
+                        for(var i=1; i<arregloDeBolasCompleto.length; i++){
+                            arregloDeBolasCompleto[i].getBola().body.setImmovable(true);
+                        }
+                    }
+                        
+                    if(cursor.includes("DOWN"+turnoDeJugador)){
+                        arregloDeBolasCompleto[0].getBola().setVelocityY(200);
+                        arregloDeBolasCompleto[0].getBola().setBounce(0);
+
+                        for(var i=1; i<arregloDeBolasCompleto.length; i++){
+                            arregloDeBolasCompleto[i].getBola().body.setImmovable(true);
+                        }
+                    }
+
+                    
+                    if(cursor.includes("BY"+turnoDeJugador)){
+                        for(var i=1; i<arregloDeBolasCompleto.length; i++){
+                            arregloDeBolasCompleto[i].getBola().body.setImmovable(false);
+                        }
+                        isBallReadyToShoot = true;
+                        escucharBolaEnMano = false;
+                        if(temporalDividerPlatform.body.enable)
+                            temporalDividerPlatform.disableBody(true, true);
+                    }
+                    
+                }
+
+                if(escucharTaco == true && escucharBolaEnMano == false){ 
+                    cue.setVisible(true);
+                    //console.log("escuchando taco... ");
+                    cue.x=arregloDeBolasCompleto[0].getBola().x;
+                    cue.y=arregloDeBolasCompleto[0].getBola().y;
+
+                    if(ejecutarTiro == false){
+                    
+                        if(cursor.includes("GyroscopeXLEFT"+turnoDeJugador) || cursor.includes("ARROWLEFT"+turnoDeJugador)){
+                            var valorDeMovimientoCapturado = 0;
+                            
+                            if(cursor.includes("ARROWLEFT"+turnoDeJugador)){
+                                valorDeMovimientoCapturado = 1;
+                            }
+
+                            if(cursor.includes("STOPARROWLEFT"+turnoDeJugador)){
+                                valorDeMovimientoCapturado = 0;
+                            }
+
+                            if(cursor.includes("GyroscopeXLEFT"+turnoDeJugador)){
+                                var movimientoCapturado = cursor.split(":");
+                                valorDeMovimientoCapturado = movimientoCapturado[1];
+                            }
+                            
+                            cueMovement(valorDeMovimientoCapturado);
+                        }
+
+                        if(cursor.includes("GyroscopeXRIGHT"+turnoDeJugador) || cursor.includes("ARROWRIGHT")){// || cursors.right.isDown){
+                            var valorDeMovimientoCapturado = 0;
+
+                            if(cursor.includes("ARROWRIGHT"+turnoDeJugador)){
+                                valorDeMovimientoCapturado = -1;
+                            }
+
+                            if(cursor.includes("STOPARROWRIGHT"+turnoDeJugador)){
+                                valorDeMovimientoCapturado = 0;
+                            }
+
+                            if(cursor.includes("GyroscopeXRIGHT"+turnoDeJugador)){//este valor ya tiene signo negativo
+                                var movimientoCapturado = cursor.split(":");
+                                valorDeMovimientoCapturado = movimientoCapturado[1];
+                            }
+                            
+                            //console.log("movimientoCapturado GyroscopeXRIGHT: "+valorDeMovimientoCapturado);
+                            cueMovement(valorDeMovimientoCapturado);
+                        }
+                    
+                    }
+
+                    //if(ejecutarTiro == true)
+                    if(cursor.includes("BX"+turnoDeJugador) && ejecutarTiroConfirm == false){
+                        ejecutarTiro = true;
+                        //console.log("ejecutarTiro = true");
+                    }
+
+                    //capturando valor del acelerómetro
+                    if(ejecutarTiro == true && cursor.includes("AccelerometerY"+turnoDeJugador)){//cursors.up.isDown){
+                        aceleracionCapturada = cursor.split(":");
+                        if(aceleracionCapturada[1]>20)
+                            aceleracionCapturada[1] = 20;
+                        if(turnoDeJugador==1 && cursor.includes("1")){
+                            hp.setValue(aceleracionCapturada[1]);
+                        }
+                        if(turnoDeJugador==2 && cursor.includes("2")){
+                            hp2.setValue(aceleracionCapturada[1]);
+                        }
+                        esperarConfirmacionAcelerometro = true;
+                        return;
+                    }// fin capturando valor del acelerómetro
+                    
+                    //
+                    if(esperarConfirmacionAcelerometro == true && cursor.includes("BX"+turnoDeJugador)){
+                      ejecutarTiroConfirm = true;
+                      ejecutarTiro = false;
+                      return;
+                    }
+                    
+                    if(ejecutarTiroConfirm == true){
+                      //console.log("ejecutarTiroConfirm == true");
+                    //if(ejecutarTiro == true && ejecutarTiroConfirm == true){
+                      //ejecutar luego de reconfirmar el tiro
+
+                      arregloDeBolasCompleto[0].getBola().setBounce(1, 1);
+                        
+                      touchingPoint = this.physics.add.image(cue.x + (50 * Math.cos(cue.rotation)), cue.y + (50 * Math.sin(cue.rotation)), 'touchingPoint');
+                      this.physics.add.collider(touchingPoint,arregloDeBolasCompleto[0].getBola());
+
+                      if(Math.abs(cue.angle)==180 || Math.abs(cue.angle)==0)
+                          this.physics.accelerateToObject(touchingPoint, arregloDeBolasCompleto[0].getBola(), 3000);    //revisar 03/05/21
+                      else
+                          this.physics.moveToObject(touchingPoint, arregloDeBolasCompleto[0].getBola(), 120*aceleracionCapturada[1]);    //1000);    //aceleración del taco para golpe
+                      
+                      touchingPoint.setVisible(false);
+
+                      this.physics.add.overlap(touchingPoint, arregloDeBolasCompleto[0].getBola(), touchingPointAndWhiteBallCollided, null, this);
+                      
+                      if(touchingPoint.body.velocity.x != 0 || touchingPoint.body.velocity.y != 0)
+                          touchingPointOnMovement = true;
+
+                      cue.x += Math.abs(50 * Math.cos(cue.rotation));
+                      cue.y -= Math.abs(50 * Math.sin(cue.rotation));
+                      cue.setVisible(false);
+
+                      isBallReadyToShoot = false;
+                      escucharTaco = false;
+                      ejecutarTiro = false;
+
+                      esperarConfirmacionAcelerometro = false;
+                      ejecutarTiroConfirm = false;
+                      return;
+                    }
+
+                    function touchingPointAndWhiteBallCollided(){
+                        //console.log("function touchingPointAndWhiteBallCollided");
+                        if(typeof touchingPoint !== 'undefined'){
+                            touchingPointOnMovement = false;
+                            touchingPoint.disableBody(true, true);
+                            delete touchingPoint;
+                        }    
+                    }
+                }
+                
+                if(bolasParadas>=16){
+                    
+                    if(isNewShoot == true){
+                        if(isNewOpeningShoot == true){
+                            //console.log("habilitando bola en mano dentro de la sección 1/4 parte de la mesa");
+                            this.physics.add.collider(arregloDeBolasCompleto[0].getBola(), temporalDividerPlatform);//choques
+                            escucharBolaEnMano = true;
+                        }
+                        if(isNewOpeningShoot == false && faltaPorBolaBlanca == true){
+                            //console.log("habilitando bola en mano para que se mueva dentro de toda la mesa");
+                            escucharBolaEnMano = true;
+                        }
+                        //-----------------------------
+                        if(isBallReadyToShoot == true){
+                            isNewShoot = false; //tiro nuevo queda deshabilitado porque la bola ya se ha ubicado
+                            escucharTaco = true;
+                        }
+                    }
+
+                    if(isNewShoot == false && escucharBolaEnMano == false && escucharTaco == false){
+
+                        faltaPorBolaBlanca = validarBolaBlanca();
+                        validarBolasMetidas();
+                        
+                        //validaciones!!!
+                        if(faltaPorBolaBlanca == false){
+                            if(tipoDeBolaJugador1!="" && tipoDeBolaJugador2!=""){   //ya se ha asignado bolas
+                                if((turnoDeJugador==1 && tipoDeBolaJugador1==tipoPrimeraBolaGolpeadaXTiro) || (turnoDeJugador==2 && tipoDeBolaJugador2==tipoPrimeraBolaGolpeadaXTiro)){
+                                    isBallReadyToShoot = true;
+                                }else{
+                                    mantenerTurno = false;
+                                    escucharBolaEnMano = true;
+                                }
+                            }else{  //no hay asignación de bola
+                                if(tipoPrimeraBolaGolpeadaXTiro==""){   //no ha golpeado ninguna bola
+                                    temporalDividerPlatform.enableBody(true);
+                                    arregloDeBolasCompleto[0].getBola().x = 654;
+                                    arregloDeBolasCompleto[0].getBola().y = 654;
+                                    isNewShoot = true;
+                                    isNewOpeningShoot = true;
+                                    mantenerTurno = false;
+                                    escucharBolaEnMano = true;
+                                    return;
+                                }else{
+                                    isBallReadyToShoot = true;
+                                }
+                            }
+                        }else{  //valida
+                            mantenerTurno = false;
+                            escucharBolaEnMano = true;
+                        }
+                        bolasParadas = 0;
+                        if(mantenerTurno == false){
+                          if(turnoDeJugador == 1)
+                            turnoDeJugador = 2;
+                          else
+                            turnoDeJugador = 1;
+                        }
+                        
+                        mantenerTurno = false;
+                        isNewShoot = true;
+                        isNewOpeningShoot = false;
+                    }
+                    tipoPrimeraBolaGolpeadaXTiro = "";  //reinicia el tipo de bola inicialmente golpeada
+                }
+            }
+
+            function crearPosicionesAleatorio(){        //crea las posiciones aleatorias y las ubica en un array
+                var arregloAleatorioTmp = [];
+                var arregloAleatorioString = "random pos: ";
+
+                arregloAleatorioTmp[0] = 0;
+                arregloAleatorioTmp[1] = 1;
+                arregloAleatorioTmp[8] = 8;
+
+                for(i=0; i<=15; i++){   //creando valores aleatorios
+                    pos = Math.floor(Math.random() * 16);
+                    for(j=0; j<i; j++){ //buscando si existe el valor en el arreglo temporal
+                        if(arregloAleatorioTmp[j]==pos || pos==0 || pos==1 || pos==8){
+                            pos = Math.floor(Math.random() * 16);
+                            j=-1;
+                        }
+                    }                    
+                    if(i!=0 && i!=1 && i!=8){
+                        arregloAleatorioTmp[i] = pos;
+                    }
+                }
+
+                for(i=0; i<=15; i++){
+                    arregloAleatorioString += "["+arregloAleatorioTmp[i]+"]";
+                }
+                
+                return arregloAleatorioTmp;
+            }
+
+            function validarUbicacionDeExtremos(arregloAleatorio){
+                var ubicacionDeExtremosString = "u. ext.";
+                var cambio=false;
+                if(arregloAleatorio[11]<8 && arregloAleatorio[15]<8){
+                    for(i=2; i<=15; i++){
+                        if(arregloAleatorio[i]>8){
+                            var temp = arregloAleatorio[i];
+                            arregloAleatorio[i] = arregloAleatorio[15];
+                            arregloAleatorio[15] = temp;
+                            break;
+                        }
+                    }
+                    cambio=true;
+                }
+                if(arregloAleatorio[11]>8 && arregloAleatorio[15]>8){
+                    for(i=2; i<=15; i++){
+                        if(arregloAleatorio[i]<8){
+                            var temp = arregloAleatorio[i];
+                            arregloAleatorio[i] = arregloAleatorio[15];
+                            arregloAleatorio[15] = temp;
+                            break;
+                        }
+                    }
+                    cambio=true;
+                }
+                if(cambio == true){
+                    for(i=0; i<=15; i++){
+                        ubicacionDeExtremosString += "["+arregloAleatorio[i]+"]";
+                    }
+                }
+                return arregloAleatorio;
+            }
+
+            function ordenarBolas(){
+                posX[arregloAleatorio[0]] = 654;                                      posY[arregloAleatorio[0]] = 654;
+                posX[arregloAleatorio[1]] = pmx - (2 * 36 * Math.cos(radianAngle));   posY[arregloAleatorio[1]] = pmy;
+                posX[arregloAleatorio[2]] = pmx - (1 * 36 * Math.cos(radianAngle));   posY[arregloAleatorio[2]] = pmy - (36/2);
+                posX[arregloAleatorio[3]] = pmx - (1 * 36 * Math.cos(radianAngle));   posY[arregloAleatorio[3]] = pmy + (36/2);
+                posX[arregloAleatorio[4]] = pmx;                                      posY[arregloAleatorio[4]] = pmy - 36;
+                posX[arregloAleatorio[5]] = pmx;                                      posY[arregloAleatorio[5]] = pmy + 36;
+                posX[arregloAleatorio[6]] = pmx + (1 * 36 * Math.cos(radianAngle));   posY[arregloAleatorio[6]] = pmy - (3*36/2);
+                posX[arregloAleatorio[7]] = pmx + (1 * 36 * Math.cos(radianAngle));   posY[arregloAleatorio[7]] = pmy - (1*36/2);
+                posX[arregloAleatorio[8]] = pmx;                                      posY[arregloAleatorio[8]] = pmy;
+                posX[arregloAleatorio[9]] = pmx + (1 * 36 * Math.cos(radianAngle));   posY[arregloAleatorio[9]] = pmy + (1*36/2);
+                posX[arregloAleatorio[10]]= pmx + (1 * 36 * Math.cos(radianAngle));   posY[arregloAleatorio[10]]= pmy + (3*36/2);
+                posX[arregloAleatorio[11]]= pmx + (2 * 36 * Math.cos(radianAngle));   posY[arregloAleatorio[11]]= pmy - (2*36);
+                posX[arregloAleatorio[12]]= pmx + (2 * 36 * Math.cos(radianAngle));   posY[arregloAleatorio[12]]= pmy - 36;
+                posX[arregloAleatorio[13]]= pmx + (2 * 36 * Math.cos(radianAngle));   posY[arregloAleatorio[13]]= pmy;
+                posX[arregloAleatorio[14]]= pmx + (2 * 36 * Math.cos(radianAngle));   posY[arregloAleatorio[14]]= pmy + (2*36/2);
+                posX[arregloAleatorio[15]]= pmx + (2 * 36 * Math.cos(radianAngle));   posY[arregloAleatorio[15]]= pmy + (4*36/2);
+            }
+       
+            function ganador(){
+                popUpBackGround.setVisible(true);
+                popUpBackGround.alpha = 0.5;
+
+                //rectángulo sobre la mesa con el mensaje ganador
+                popUp.setVisible(true);
+                
+                labelGanador.setVisible(true);
+
+                //carga la imagen de la copa
+                goldenCup.setVisible(true);
+                
+                //crea los pica pica y les asigna movimiento
+                for(var i=1; i<=5; i++){
+                    for(var j=0; j<100; j++){
+                        var signo = Math.random() < 0.5 ? -1 : 1;
+                        arregloDeConfettis[(((i-1)*100)+j)].setVisible(true);
+                        arregloDeConfettis[(((i-1)*100)+j)].setBounce(1,1);
+                        arregloDeConfettis[(((i-1)*100)+j)].setVelocity( signo*(Math.floor(Math.random() * 100) + 1), -1*(Math.floor(Math.random() * 100) + 1) );
+                    }
+                }
+            }
+
+        //<a href='https://www.freepik.es/fotos/fondo'>Foto de Fondo creado por rawpixel.com - www.freepik.es</a>
+        </script>
+    </head>
+
+    <body>        
+    </body>    
+</html>
